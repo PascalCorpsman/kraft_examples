@@ -4,8 +4,8 @@ Each example is made in that way that it has as less "structure" code possible s
 The directories are labeled with increasing numbers, the higher the number the more complex is the topic of the example.
 
 # What do i need to compile the examples
-- kraft physics engine from here: https://github.com/BeRo1985/kraft
 - Lazarus IDE (2.2.0 or grater) and FPC Compiler (3.2.2 or greater) installed and running
+- kraft physics engine from here: https://github.com/BeRo1985/kraft
 - DGLOpenGl.pas from here: https://github.com/saschawillems/dglopengl
 - LazOpenGLControl installed into the Lazarus IDE
 
