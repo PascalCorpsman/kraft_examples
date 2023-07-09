@@ -101,7 +101,6 @@
       </Unit6>
       <Unit7>
         <Filename Value="../../OpenGL/dglopengl.pas"/>
-        <IsPartOfProject Value="True"/>
         <UnitName Value="dglOpenGL"/>
         <EditorIndex Value="-1"/>
         <WindowIndex Value="-1"/>
@@ -111,7 +110,6 @@
       </Unit7>
       <Unit8>
         <Filename Value="../kraft.pas"/>
-        <IsPartOfProject Value="True"/>
         <EditorIndex Value="1"/>
         <WindowIndex Value="1"/>
         <TopLine Value="31319"/>
