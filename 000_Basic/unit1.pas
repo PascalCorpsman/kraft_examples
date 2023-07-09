@@ -168,13 +168,18 @@ Begin
   glvertex3f(100, 0, -100);
   glvertex3f(100, 0, 100);
   glend();
-
-  // Render Every Rigid Body that is in the world as "Looped Line"
-  glcolor3f(1, 1, 1);
   // Iterate through each Body (also the floor)
   RigidBody := KraftWorld.RigidBodyFirst;
   While assigned(RigidBody) Do Begin
     glPushMatrix;
+    // Dynamic Objects will be rendered in Yellow
+    If RigidBody.IsDynamic Then Begin
+      glcolor3f(1, 1, 0);
+    End
+    Else Begin
+      // Static Objects will be rendered in white ;)
+      glcolor3f(1, 1, 1);
+    End;
     // Get the bodys rotation and Position matrix and multiply it onto the Modelview matrix
     glMultMatrixf(@RigidBody.WorldTransform[0, 0]);
     // Iterate through each Shape thats the Body consist of
