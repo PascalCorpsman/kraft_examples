@@ -5,6 +5,7 @@ The directories are labeled with increasing numbers, the higher the number the m
 
 # What do i need to compile the examples
 - kraft physics engine from here: https://github.com/BeRo1985/kraft
+- Lazarus IDE (2.2.0 or grater) and FPC Compiler (3.2.2 or greater) installed and running
 - DGLOpenGl.pas from here: https://github.com/saschawillems/dglopengl
 - LazOpenGLControl installed into the Lazarus IDE
 
