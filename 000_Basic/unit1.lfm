@@ -1,12 +1,12 @@
 object Form1: TForm1
-  Left = 586
+  Left = 346
   Height = 394
-  Top = 227
-  Width = 634
+  Top = 108
+  Width = 683
   ActiveControl = OpenGLControl1
   Caption = 'Basic example'
   ClientHeight = 394
-  ClientWidth = 634
+  ClientWidth = 683
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   Position = poScreenCenter
@@ -33,7 +33,7 @@ object Form1: TForm1
     Left = 458
     Height = 25
     Top = 72
-    Width = 162
+    Width = 214
     Caption = 'Reset Box'
     OnClick = Button2Click
     TabOrder = 2
@@ -46,6 +46,16 @@ object Form1: TForm1
     Caption = 'Box is moveable'
     OnClick = CheckBox2Click
     TabOrder = 3
+  end
+  object Memo1: TMemo
+    Left = 458
+    Height = 282
+    Top = 104
+    Width = 214
+    Lines.Strings = (
+      'Memo1'
+    )
+    TabOrder = 4
   end
   object Timer1: TTimer
     OnTimer = Timer1Timer

@@ -31,6 +31,15 @@ Uses
   , kraft // Include the Kraft Physics Engine
   ;
 
+(*
+ * ID's for each of the Elements in the World -> Stored in the UserData field
+ * This is only needed for the collision detection logik
+ *)
+Const
+  ID_Box = 1;
+  ID_Floor = 2;
+  ID_StaticBox = 3;
+
 Type
 
   { TForm1 }
@@ -39,6 +48,7 @@ Type
     Button2: TButton;
     CheckBox1: TCheckBox;
     CheckBox2: TCheckBox;
+    Memo1: TMemo;
     OpenGLControl1: TOpenGLControl;
     Timer1: TTimer;
     Procedure Button2Click(Sender: TObject);
@@ -61,11 +71,13 @@ Type
 
     Procedure CreateWorld;
 
-    Procedure ClearWorldContent; // Use only if you want to empty the world's content without freeing the KraftWorld instance
+    Procedure ClearWorldContent; // As we use userdata we have to "clear" the userdata to prevent memory leaks
 
     Procedure RenderSzene;
 
     Procedure UpdatePhysics;
+
+    Procedure OnBoxContactWith(Const ContactPair: PKraftContactPair; Const WithShape: TKraftShape); // Callback, that will be used to get informed if the Box is hitting something
   public
     { public declarations }
   End;
@@ -106,6 +118,7 @@ Begin
   KraftWorld.WorldFrequency := 60; // We want the Engine to run at 60 FPS (default)
   KraftWorld.Gravity.Vector := Vector3(0, -9.8, 0); // (default)
   CreateWorld;
+  Button2.Click; // Reset the World
 End;
 
 Procedure TForm1.FormCloseQuery(Sender: TObject; Var CanClose: Boolean);
@@ -117,9 +130,16 @@ Begin
 End;
 
 Procedure TForm1.ClearWorldContent;
+Var
+  pi: ^Integer;
 Begin
   // TODO: is there more which needs to be freed ?
   While assigned(KraftWorld.RigidBodyFirst) Do Begin
+    // Free our user data
+    If assigned(KraftWorld.RigidBodyFirst.UserData) Then Begin
+      pi := KraftWorld.RigidBodyFirst.UserData;
+      dispose(pi);
+    End;
     KraftWorld.RigidBodyFirst.Free;
   End;
 
@@ -188,6 +208,7 @@ Var
   Shape: TKraftShape;
   Floor: TKraftRigidBody;
   FloorShape: TKraftShapePlane; // A Plane infinite in width
+  pi: ^Integer;
 Begin
   (*
    * Each element in the Physiks Engine is a TKraftRigidBody
@@ -207,7 +228,10 @@ Begin
   Floor.SetWorldTransformation(Matrix4x4Translate(0.0, 0.0, 0.0));
   //
   Floor.CollisionGroups := [0]; // TODO: How do Collision Groups work ??
-
+  // Attach the ID to the floor for detection collision
+  new(pi);
+  pi^ := ID_Floor;
+  Floor.UserData := pi;
   (*
    * There are multiple ways to create a Box, this demo shows 2 different ways
    *)
@@ -232,6 +256,7 @@ Begin
   // TODO: How does ForcedMass, Restitution and Density interact with each oder ? and why are some defined at shape level and others on rigidbody level ?
   Shape.Restitution := 0.3;
   Shape.Density := 1.0;
+  Shape.OnContactBegin := @OnBoxContactWith;
   RigidBody.ForcedMass := 10;
   RigidBody.Finish;
   (*
@@ -243,7 +268,11 @@ Begin
    *)
   RigidBody.SetWorldPosition(MoveableBoxStartingPosition);
   RigidBody.CollisionGroups := [0]; // TODO: How do Collision Groups work ??
-  Floor.UserData := Nil; // Attach user data to the object if needed ;)
+  // Attach the ID to the Box for detection collision
+  new(pi);
+  pi^ := ID_Box;
+  RigidBody.UserData := pi;
+
   (*
    * If Needed you can set a own gravity for the box, otherwise the worlds gravity is used.
    * )
@@ -279,12 +308,10 @@ Begin
   // to set it flat on the ground
   RigidBody.SetWorldPosition(vector3(0, 0.5, 0));
   RigidBody.CollisionGroups := [0]; // TODO: How do Collision Groups work ??
-
-  //Create Aufräumen,
-   //Dann noch nen Collider Event rein machen, der Erkennt ob wir mit dem Boden, oder der Box Kollidieren
-
-   Hier fehlen nur noch die Kollider !
-
+  // Attach the ID to the Static Box for detection collision
+  new(pi);
+  pi^ := ID_StaticBox;
+  RigidBody.UserData := pi;
 End;
 
 Procedure TForm1.UpdatePhysics;
@@ -311,6 +338,41 @@ Begin
   End;
   // Last thing accumulate the simulated time.
   LastTick := LastTick + trunc((cnt - 1) * KraftWorld.WorldDeltaTime * 1000);
+End;
+
+Procedure TForm1.OnBoxContactWith(Const ContactPair: PKraftContactPair;
+  Const WithShape: TKraftShape);
+Var
+  c1, c2, t: integer;
+  s: String;
+Begin
+  If Not assigned(ContactPair) Then exit;
+  // Double Check if the Box is really involved
+  If (ContactPair^.Shapes[0].RigidBody = box) Or (ContactPair^.Shapes[1].RigidBody = box) Then Begin
+    // Get the Id's of both elements
+    c1 := integer(ContactPair^.Shapes[0].RigidBody.UserData^);
+    c2 := integer(ContactPair^.Shapes[1].RigidBody.UserData^);
+    // Sort so that box is always first (due to the fact that ID_Box is the smallest number)
+    If c1 > c2 Then Begin
+      t := c1;
+      c1 := c2;
+      c2 := t;
+    End;
+    // Create the Info String of both objects
+    s := '';
+    Case c1 Of
+      ID_Box: s := 'Box -> ';
+      ID_Floor: s := 'Floor -> ';
+      ID_StaticBox: s := 'Static Box -> ';
+    End;
+    Case c2 Of
+      ID_Box: s := s + 'Box';
+      ID_Floor: s := s + 'Floor';
+      ID_StaticBox: s := s + 'Static Box';
+    End;
+    // Log to form
+    Memo1.Lines.Add(s);
+  End;
 End;
 
 Procedure TForm1.OpenGLControl1Paint(Sender: TObject);
@@ -362,6 +424,7 @@ End;
 Procedure TForm1.Button2Click(Sender: TObject);
 Begin
   // Reset
+  memo1.clear;
   (*
    * Normaly you expect to reset the WorldTransform as this holds every Rotation, Position ..
    * Information, but it seems that the Engine does not update orientation if you "override" the
