@@ -5,7 +5,7 @@ This is the "help" to get the Sandbox Example from the Kraft Repository compiled
 ## Content
 ??
 
-## List of needed Repositories 
+## Additional list of needed sources
 - Kraft multi processing library <br> https://github.com/BeRo1985/pasmp
 
 - Kraft UTF8 support library <br> https://github.com/BeRo1985/pucu
