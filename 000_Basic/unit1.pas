@@ -302,7 +302,8 @@ Begin
    * or create the box by a default shape (Sphere, Capsule, ConvexHull, Box, Plane, Mesh)
    *)
   // TODO: wtf no Cone, Cylinder ?
-  // TODO: is this a Bug, in the orig Code, i would expect that a box with extends 2,1,2 is of dimension 2,1,2. But actually it is 4,2,4
+  // !! Attention !!
+  // The Parameters are "extents" this means if you want to give "dimenension" you have to divide by 2
   Shape := TKraftShapeBox.Create(KraftWorld, RigidBody, vector3(2 / 2, 1 / 2, 2 / 2));
   // TODO: How does ForcedMass, Restitution and Density interact with each oder ? and why are some defined at shape level and others on rigidbody level ?
   Shape.Restitution := 0.3;
