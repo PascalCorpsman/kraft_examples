@@ -1,4 +1,4 @@
-This is the most Basic Example that someone can think of.
+This Example shows how to setup a rigidbody that contains multiple shapes and how to manipulate its centre of mass.
 
 ![](preview.png)
 
@@ -10,3 +10,4 @@ This is the most Basic Example that someone can think of.
 
 ## Additional list of needed sources
 - none
+

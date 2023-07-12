@@ -39,6 +39,7 @@ Type
     Button1: TButton;
     CheckBox1: TCheckBox;
     CheckBox2: TCheckBox;
+    Label1: TLabel;
     OpenGLControl1: TOpenGLControl;
     ScrollBar1: TScrollBar;
     Timer1: TTimer;
@@ -386,11 +387,11 @@ Begin
   (*
    * Set a new Center of Mass
    *)
-  CompoundBox.ForcedCenterOfMass.Vector := Vector3(ScrollBar1.Position / 50 + 1.5, 4.5, 0);
+  CompoundBox.ForcedCenterOfMass.Vector := Vector3(-ScrollBar1.Position / 50 + 1.5, 4.5, 0);
   // Set the Physics Engine to use the given Centre of Mass and do not auto calc it by the shapes !
   CompoundBox.Flags := CompoundBox.Flags + [krbfHasForcedCenterOfMass];
 
-  Why does the object more or less "explode" if it starts to fall over ?
+//  Why does the object more or less "explode" if it starts to fall over ?
 
 End;
 
@@ -418,4 +419,6 @@ Begin
 End;
 
 End.
+
+
 
