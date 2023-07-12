@@ -1,0 +1,65 @@
+object Form1: TForm1
+  Left = 346
+  Height = 394
+  Top = 108
+  Width = 683
+  ActiveControl = OpenGLControl1
+  Caption = 'Basic example'
+  ClientHeight = 394
+  ClientWidth = 683
+  OnCloseQuery = FormCloseQuery
+  OnCreate = FormCreate
+  Position = poScreenCenter
+  LCLVersion = '2.3.0.0'
+  object OpenGLControl1: TOpenGLControl
+    Left = 8
+    Height = 378
+    Top = 8
+    Width = 438
+    OnMakeCurrent = OpenGLControl1MakeCurrent
+    OnPaint = OpenGLControl1Paint
+    OnResize = OpenGLControl1Resize
+  end
+  object CheckBox1: TCheckBox
+    Left = 458
+    Height = 22
+    Top = 17
+    Width = 95
+    Caption = 'Enable time'
+    OnClick = CheckBox1Click
+    TabOrder = 1
+  end
+  object Button1: TButton
+    Left = 458
+    Height = 25
+    Top = 72
+    Width = 214
+    Caption = 'Reset Box'
+    OnClick = Button1Click
+    TabOrder = 2
+  end
+  object CheckBox2: TCheckBox
+    Left = 458
+    Height = 22
+    Top = 40
+    Width = 122
+    Caption = 'Box is moveable'
+    OnClick = CheckBox2Click
+    TabOrder = 3
+  end
+  object ScrollBar1: TScrollBar
+    Left = 458
+    Height = 14
+    Top = 144
+    Width = 214
+    Min = -100
+    PageSize = 0
+    TabOrder = 4
+    OnChange = ScrollBar1Change
+  end
+  object Timer1: TTimer
+    OnTimer = Timer1Timer
+    Left = 24
+    Top = 24
+  end
+end
