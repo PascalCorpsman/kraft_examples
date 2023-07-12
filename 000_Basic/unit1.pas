@@ -29,6 +29,7 @@ Uses
    *)
   dglOpenGL // http://wiki.delphigl.com/index.php/dglOpenGL.pas
   , kraft // Include the Kraft Physics Engine
+  , kraftAdditionals // Use to have acces to "TKraftShapeCone" and "TKraftShapeCylinder"
   ;
 
 (*
@@ -45,13 +46,13 @@ Type
   { TForm1 }
 
   TForm1 = Class(TForm)
-    Button2: TButton;
+    Button1: TButton;
     CheckBox1: TCheckBox;
     CheckBox2: TCheckBox;
     Memo1: TMemo;
     OpenGLControl1: TOpenGLControl;
     Timer1: TTimer;
-    Procedure Button2Click(Sender: TObject);
+    Procedure Button1Click(Sender: TObject);
     Procedure CheckBox1Click(Sender: TObject);
     Procedure CheckBox2Click(Sender: TObject);
     Procedure FormCloseQuery(Sender: TObject; Var CanClose: Boolean);
@@ -118,7 +119,6 @@ Begin
   KraftWorld.WorldFrequency := 60; // We want the Engine to run at 60 FPS (default)
   KraftWorld.Gravity.Vector := Vector3(0, -9.8, 0); // (default)
   CreateWorld;
-  Button2.Click; // Reset the World
 End;
 
 Procedure TForm1.FormCloseQuery(Sender: TObject; Var CanClose: Boolean);
@@ -186,8 +186,19 @@ Begin
     Shape := RigidBody.ShapeFirst;
     While assigned(Shape) Do Begin
       If shape Is TKraftShapeConvexHull Then Begin
+        glPushMatrix;
         ShapeHull := TKraftShapeConvexHull(shape);
         // This is the acutal rendering of the Points of the shape
+        (*
+         * There are 2 posibilities to actually render a rigidbodys shape
+         * 1. the one shown here in code
+         *    RigidBody.WorldTransform, ShapeHull.LocalTransform
+         * or
+         * 2. shape.WorldTransform
+         *
+         * Both variants do work, choose the one which fits better to your usecase
+         *)
+        glMultMatrixf(@ShapeHull.LocalTransform[0, 0]);
         glbegin(GL_LINE_LOOP);
         For i := 0 To ShapeHull.ConvexHull.CountVertices - 1 Do Begin
           v := ShapeHull.ConvexHull.Vertices[i].Position;
@@ -197,6 +208,7 @@ Begin
           glvertex3fv(@v);
         End;
         glend();
+        glPopMatrix;
       End;
       Shape := Shape.ShapeNext;
     End;
@@ -213,7 +225,7 @@ Var
   Shape: TKraftShape;
   Floor: TKraftRigidBody;
   FloorShape: TKraftShapePlane; // A Plane infinite in width
-  pi: ^Integer;
+  pint: ^Integer;
 Begin
   (*
    * Each element in the Physiks Engine is a TKraftRigidBody
@@ -234,9 +246,9 @@ Begin
   //
   Floor.CollisionGroups := [0]; // TODO: How do Collision Groups work ??
   // Attach the ID to the floor for detection collision
-  new(pi);
-  pi^ := ID_Floor;
-  Floor.UserData := pi;
+  new(pint);
+  pint^ := ID_Floor;
+  Floor.UserData := pint;
   (*
    * There are multiple ways to create a Box, this demo shows 2 different ways
    *)
@@ -271,12 +283,14 @@ Begin
   (*
    * or by the SetWorldPosition method
    *)
+  //RigidBody.SetOrientation(pi / 2, 0, 0); // Rotate the Box 90 Degree around the X-Achsis
   RigidBody.SetWorldPosition(MoveableBoxStartingPosition);
   RigidBody.CollisionGroups := [0]; // TODO: How do Collision Groups work ??
+
   // Attach the ID to the Box for detection collision
-  new(pi);
-  pi^ := ID_Box;
-  RigidBody.UserData := pi;
+  new(pint);
+  pint^ := ID_Box;
+  RigidBody.UserData := pint;
 
   (*
    * If Needed you can set a own gravity for the box, otherwise the worlds gravity is used.
@@ -315,9 +329,9 @@ Begin
   RigidBody.SetWorldPosition(vector3(0, 0.5, 0));
   RigidBody.CollisionGroups := [0]; // TODO: How do Collision Groups work ??
   // Attach the ID to the Static Box for detection collision
-  new(pi);
-  pi^ := ID_StaticBox;
-  RigidBody.UserData := pi;
+  new(pint);
+  pint^ := ID_StaticBox;
+  RigidBody.UserData := pint;
 End;
 
 Procedure TForm1.UpdatePhysics;
@@ -427,7 +441,7 @@ Begin
 End;
 
 
-Procedure TForm1.Button2Click(Sender: TObject);
+Procedure TForm1.Button1Click(Sender: TObject);
 Begin
   // Reset
   memo1.clear;
