@@ -242,12 +242,14 @@ Begin
   Shape.Restitution := 0.3;
   Shape.Density := 1.0;
   Shape.LocalTransform := Matrix4x4Translate(0, 2, 0);
+  Shape.ForcedMass := 1;
   Shape.SynchronizeTransform;
   Shape.Finish;
   shape := TKraftShapeBox.Create(KraftWorld, RigidBody, Vector3(2, 0.5, 0.5));
   Shape.Restitution := 0.3;
   Shape.Density := 1.0;
   Shape.LocalTransform := Matrix4x4Translate(1.5, 4.5, 0);
+  Shape.ForcedMass := 1;
   Shape.Finish;
   RigidBody.ForcedMass := 10;
   RigidBody.Finish;
@@ -387,13 +389,17 @@ Begin
   (*
    * Set a new Center of Mass
    *)
-  CompoundBox.ForcedCenterOfMass.Vector := Vector3(-ScrollBar1.Position / 50 + 1.5, 4.5, 0);
+//  CompoundBox.ForcedCenterOfMass.Vector := Vector3(-ScrollBar1.Position / 50 + 1.5, 4.5, 0);
+  CompoundBox.ForcedCenterOfMass.Vector := Vector3(-ScrollBar1.Position / 50 + 1.5, 2, 0);
+  CompoundBox.ForcedMass := 100;
+  CompoundBox.BodyInertiaTensor := Matrix3x3Identity;
   // Set the Physics Engine to use the given Centre of Mass and do not auto calc it by the shapes !
   CompoundBox.Flags := CompoundBox.Flags + [krbfHasForcedCenterOfMass];
+  CompoundBox.Finish; // Update the internal data structures
 
-//  Why does the object more or less "explode" if it starts to fall over ?
+  Why does the Object more Or less "explode" after the first collision woth the ground ?
 
-End;
+  End;
 
 Procedure TForm1.Timer1Timer(Sender: TObject);
 {$IFDEF DebuggMode}
@@ -419,6 +425,4 @@ Begin
 End;
 
 End.
-
-
 
