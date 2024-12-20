@@ -7,9 +7,10 @@ Uses
   cthreads,
 {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, imagesforlazarus, Unit1, kraftAdditionals;
+  Forms, imagesforlazarus, Unit1, kraftAdditionals, dglOpenGL, kraft;
 
 Begin
+  Application.Title:='';
   Application.Title:='';
   Application.Initialize;
   Application.CreateForm(TForm1, Form1);

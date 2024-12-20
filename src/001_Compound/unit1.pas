@@ -397,7 +397,7 @@ Begin
   CompoundBox.Flags := CompoundBox.Flags + [krbfHasForcedCenterOfMass];
   CompoundBox.Finish; // Update the internal data structures
 
-  Why does the Object more Or less "explode" after the first collision woth the ground ?
+  //Why does the Object more Or less "explode" after the first collision woth the ground ?
 
   End;
 

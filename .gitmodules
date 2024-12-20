@@ -1,0 +1,6 @@
+[submodule "use/dglOpenGL"]
+	path = use/dglOpenGL
+	url = https://github.com/SaschaWillems/dglOpenGL.git
+[submodule "use/kraft"]
+	path = use/kraft
+	url = https://github.com/BeRo1985/kraft.git
