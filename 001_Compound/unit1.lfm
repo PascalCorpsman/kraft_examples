@@ -7,10 +7,10 @@ object Form1: TForm1
   Caption = 'Compound example'
   ClientHeight = 394
   ClientWidth = 683
+  Position = poScreenCenter
+  LCLVersion = '4.99.0.0'
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
-  Position = poScreenCenter
-  LCLVersion = '2.3.0.0'
   object OpenGLControl1: TOpenGLControl
     Left = 8
     Height = 378
@@ -26,8 +26,8 @@ object Form1: TForm1
     Top = 17
     Width = 95
     Caption = 'Enable time'
-    OnClick = CheckBox1Click
     TabOrder = 1
+    OnClick = CheckBox1Click
   end
   object Button1: TButton
     Left = 458
@@ -35,8 +35,8 @@ object Form1: TForm1
     Top = 72
     Width = 214
     Caption = 'Reset Box'
-    OnClick = Button1Click
     TabOrder = 2
+    OnClick = Button1Click
   end
   object CheckBox2: TCheckBox
     Left = 458
@@ -44,8 +44,8 @@ object Form1: TForm1
     Top = 40
     Width = 122
     Caption = 'Box is moveable'
-    OnClick = CheckBox2Click
     TabOrder = 3
+    OnClick = CheckBox2Click
   end
   object ScrollBar1: TScrollBar
     Left = 458
