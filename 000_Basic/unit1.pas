@@ -57,9 +57,7 @@ Type
     Procedure CheckBox2Click(Sender: TObject);
     Procedure FormCloseQuery(Sender: TObject; Var CanClose: Boolean);
     Procedure FormCreate(Sender: TObject);
-    Procedure OpenGLControl1MakeCurrent(Sender: TObject; Var Allow: boolean);
     Procedure OpenGLControl1Paint(Sender: TObject);
-    Procedure OpenGLControl1Resize(Sender: TObject);
     Procedure Timer1Timer(Sender: TObject);
   private
     { private declarations }
@@ -85,20 +83,59 @@ Type
 
 Var
   Form1: TForm1;
-
   Initialized: Boolean = false; // Wenn True dann ist OpenGL initialisiert
 
 Implementation
 
 {$R *.lfm}
 
+Uses
+  uvectormath, helpers
+  ;
+
 Const
   (*
    * Its used in create and reset, so therefore provide it as a constant
    *)
-  MoveableBoxStartingPosition: TKraftVector3 = (X: 1.5; y: 3; Z: 0; W: 0); // W will show is the Vector is a direction (=1) or a absolute value (=0)
+  MoveableBoxStartingPosition: TKraftVector3 = (X: 1.5; y: 3; Z: 0; W: 0); // W will show if the Vector is a direction (=1) or a absolute value (=0)
 
-  { TForm1 }
+Procedure RenderFloor;
+Const
+  FloorVertices: Array[0..11] Of GLfloat = (
+    -100, 0, 100,
+    -100, 0, -100,
+    100, 0, -100,
+    100, 0, 100
+    );
+Var
+  ColorLocation: GLint;
+Begin
+  ColorLocation := glGetUniformLocation(ShaderProgram, 'uColor');
+  If ColorLocation >= 0 Then
+    glUniform3f(ColorLocation, 1, 0, 0);
+
+  glBindVertexArray(VAO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBufferData(GL_ARRAY_BUFFER, SizeOf(FloorVertices), @FloorVertices[0], GL_DYNAMIC_DRAW);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, Nil);
+  glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+  glDisableVertexAttribArray(0);
+  glBindVertexArray(0);
+End;
+
+Procedure RegisterCallbacksAndPointers;
+Begin
+  form1.OpenGLControl1.OnResize := @Dummy.OpenGLControl1Resize;
+  dummy.Initialized := @Initialized;
+  dummy.OnResize := form1.OpenGLControl1.OnResize;
+  dummy.Invalidate := @form1.Invalidate;
+  dummy.OpenGLControl := form1.OpenGLControl1;
+  form1.OpenGLControl1.OnMakeCurrent := @Dummy.OpenGLControl1MakeCurrent;
+  form1.OnDestroy := @dummy.FormDestroy;
+End;
+
+{ TForm1 }
 
 Procedure TForm1.FormCreate(Sender: TObject);
 Begin
@@ -107,13 +144,17 @@ Begin
     showmessage('Error, could not init dglOpenGL.pas');
     Halt;
   End;
+  RegisterCallbacksAndPointers;
   (*
   60 - FPS entsprechen
   0.01666666 ms
   Ist Interval auf 16 hängt das gesamte system, bei 17 nicht.
   Generell sollte die Interval Zahl also dynamisch zum Rechenaufwand, mindestens aber immer 17 sein.
   *)
+  caption := 'Shader mode';
+  OpenGLControl1.AutoResizeViewport := True; // This is crucial for GTK3, don't know why, but without it the demo does not work
   Timer1.Interval := 17;
+  memo1.clear;
 
   KraftWorld := TKraft.Create(-1); // Create engine in Single Threaded mode
   KraftWorld.WorldFrequency := 60; // We want the Engine to run at 60 FPS (default)
@@ -154,65 +195,56 @@ Var
   Shape: TKraftShape;
   ShapeHull: TKraftShapeConvexHull;
   i: Integer;
-  v: TKraftVector3;
+  v: TVector3;
+  vertices: TVector3Array;
+  aColor: TVector3;
+  m: TMatrix4x4;
 Begin
   // This will render the "Floor", this is kind of redundant, as the floor is also part
   // of the world but as the world floor is a plane its dimensions are to big to see
   // something by the Rigid Body rendering below, so it is rendered here.
   // Keep in mind that the Flor shape has a quit bigger dimension than the "visual" will
   // show here.
-  glcolor3f(1, 0, 0);
-  glbegin(GL_QUADS);
-  glvertex3f(-100, 0, 100);
-  glvertex3f(-100, 0, -100);
-  glvertex3f(100, 0, -100);
-  glvertex3f(100, 0, 100);
-  glend();
+  RenderFloor;
   // Iterate through each Body (also the floor)
+  vertices := Nil;
   RigidBody := KraftWorld.RigidBodyFirst;
   While assigned(RigidBody) Do Begin
-    glPushMatrix;
     // Dynamic Objects will be rendered in Yellow
     If RigidBody.IsDynamic Then Begin
-      glcolor3f(1, 1, 0);
+      aColor := v3(1, 1, 0);
     End
     Else Begin
       // Static Objects will be rendered in white ;)
-      glcolor3f(1, 1, 1);
+      aColor := v3(1, 1, 1);
     End;
-    // Get the bodys rotation and Position matrix and multiply it onto the Modelview matrix
-    glMultMatrixf(@RigidBody.WorldTransform[0, 0]);
+    // TODO: multiply the body's world transform into the camera transform here.
     // Iterate through each Shape thats the Body consist of
     Shape := RigidBody.ShapeFirst;
     While assigned(Shape) Do Begin
       If shape Is TKraftShapeConvexHull Then Begin
-        glPushMatrix;
         ShapeHull := TKraftShapeConvexHull(shape);
         // This is the acutal rendering of the Points of the shape
         (*
-         * There are 2 posibilities to actually render a rigidbodys shape
-         * 1. the one shown here in code
-         *    RigidBody.WorldTransform, ShapeHull.LocalTransform
-         * or
-         * 2. shape.WorldTransform
-         *
-         * Both variants do work, choose the one which fits better to your usecase
-         *)
-        glMultMatrixf(@ShapeHull.LocalTransform[0, 0]);
-        glbegin(GL_LINE_LOOP);
+          * There are 2 posibilities To actually render a rigidbodys shape
+          * 1. the one shown here In code
+          * RigidBody.WorldTransform, ShapeHull.LocalTransform
+          * Or
+          * 2. shape.WorldTransform
+          *
+          * Both variants Do work, choose the one which fits better To your usecase
+          *)
+        m := RigidBody.WorldTransform;
+        setlength(vertices, ShapeHull.ConvexHull.CountVertices);
         For i := 0 To ShapeHull.ConvexHull.CountVertices - 1 Do Begin
+          // Kraft and the shader helpers use different vector types.
           v := ShapeHull.ConvexHull.Vertices[i].Position;
-          // Aktually v holds 4 singles, only 3 are needed, as the
-          // glvertex3fv reads in only the first 3, and they are stored
-          // in the requested correct order x,y,z everything is fine.
-          glvertex3fv(@v);
+          vertices[i] := m * v4(v.x, v.y, v.z, 1);
         End;
-        glend();
-        glPopMatrix;
+        RenderLineLoop3D(vertices, aColor);
       End;
       Shape := Shape.ShapeNext;
     End;
-    glPopMatrix;
     // Switch to the next Rigidbody in the world
     RigidBody := RigidBody.RigidBodyNext;
   End;
@@ -401,14 +433,18 @@ Begin
   // Clear all Render Buffers
   glClearColor(0.0, 0.0, 0.0, 0.0);
   glClear(GL_COLOR_BUFFER_BIT Or GL_DEPTH_BUFFER_BIT);
-  glLoadIdentity();
+
+  glUseProgram(ShaderProgram);
   // Move the Viewpoint a little, so that we can see whats going on
-  gluLookAt(5, 11, -20, 5, 5, 0, 0, 1, 0);
+  SetCameraTransform(
+    OpenGLControl1.Width, OpenGLControl1.Height,
+    v3(5, 11, -20), v3(5, 5, 0), v3(0, 1, 0));
   // Give the Physics Engine time to do it's things..
   UpdatePhysics;
   // Render the updated world
   RenderSzene;
   // Make the updates visible to the screen
+  glUseProgram(0);
   OpenGLControl1.SwapBuffers;
 End;
 
@@ -440,7 +476,6 @@ Begin
   End;
 End;
 
-
 Procedure TForm1.Button1Click(Sender: TObject);
 Begin
   // Reset
@@ -458,40 +493,6 @@ Begin
   // Also reset all inertias to really get the same behavior as on "start"
   box.LinearVelocity := Vector3(0, 0, 0);
   box.AngularVelocity := Vector3(0, 0, 0);
-End;
-
-Var
-  allowcnt: Integer = 0;
-
-Procedure TForm1.OpenGLControl1MakeCurrent(Sender: TObject; Var Allow: boolean);
-Begin
-  If allowcnt > 2 Then Begin
-    exit;
-  End;
-  inc(allowcnt);
-  // Sollen Dialoge beim Starten ausgeführt werden ist hier der Richtige Zeitpunkt
-  If allowcnt = 1 Then Begin
-    // Init dglOpenGL.pas , Teil 2
-    ReadExtensions; // Anstatt der Extentions kann auch nur der Core geladen werden. ReadOpenGLCore;
-    ReadImplementationProperties;
-  End;
-  If allowcnt = 2 Then Begin // Dieses If Sorgt mit dem obigen dafür, dass der Code nur 1 mal ausgeführt wird.
-    // Der Anwendung erlauben zu Rendern.
-    Initialized := True;
-    OpenGLControl1Resize(Nil);
-  End;
-  Form1.Invalidate;
-End;
-
-Procedure TForm1.OpenGLControl1Resize(Sender: TObject);
-Begin
-  If Initialized Then Begin
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glViewport(0, 0, OpenGLControl1.Width, OpenGLControl1.Height);
-    gluPerspective(45.0, OpenGLControl1.Width / OpenGLControl1.Height, 0.1, 100.0);
-    glMatrixMode(GL_MODELVIEW);
-  End;
 End;
 
 Procedure TForm1.Timer1Timer(Sender: TObject);

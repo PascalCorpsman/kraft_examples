@@ -7,7 +7,7 @@ Uses
   cthreads,
 {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, imagesforlazarus, Unit1;
+  Forms, Unit1;
 
 Begin
   Application.Title:='';
